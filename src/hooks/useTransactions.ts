@@ -66,23 +66,22 @@ export function useTransactions(filters: TransactionFilters = {}) {
   })
 }
 
-export function useDashboardTransactions(competencia: string, viewMode: ViewMode) {
+export function useDashboardTransactions(start: string, end: string, viewMode: ViewMode) {
   return useQuery({
-    queryKey: ['dashboard', competencia, viewMode],
+    queryKey: ['dashboard', start, end, viewMode],
     queryFn: async () => {
       const supabase = createClient()
-      const [y, m] = competencia.split('-').map(Number)
 
       let query = supabase
         .from('transactions')
         .select(TRANSACTION_SELECT)
 
       if (viewMode === 'competencia') {
-        query = query.eq('competencia', competencia)
+        query = query.gte('competencia', start).lte('competencia', end)
       } else {
-        const start = `${y}-${String(m).padStart(2, '0')}-01`
-        const end = new Date(y, m, 0).toISOString().split('T')[0]
-        query = query.gte('date', start).lte('date', end)
+        const [ey, em] = end.split('-').map(Number)
+        const dateEnd = new Date(ey, em, 0).toISOString().split('T')[0]
+        query = query.gte('date', start).lte('date', dateEnd)
       }
 
       const { data, error } = await query
@@ -92,22 +91,22 @@ export function useDashboardTransactions(competencia: string, viewMode: ViewMode
   })
 }
 
-export function useMonthlyEvolution(months: number = 6, viewMode: ViewMode) {
+export function useMonthlyEvolution(start: string, end: string, viewMode: ViewMode) {
   return useQuery({
-    queryKey: ['monthly-evolution', months, viewMode],
+    queryKey: ['monthly-evolution', start, end, viewMode],
     queryFn: async () => {
       const supabase = createClient()
-      const now = new Date()
-      const start = toCompetencia(new Date(now.getFullYear(), now.getMonth() - months + 1, 1))
 
       let query = supabase
         .from('transactions')
         .select('type, amount, competencia, date')
 
       if (viewMode === 'competencia') {
-        query = query.gte('competencia', start)
+        query = query.gte('competencia', start).lte('competencia', end)
       } else {
-        query = query.gte('date', start)
+        const [ey, em] = end.split('-').map(Number)
+        const dateEnd = new Date(ey, em, 0).toISOString().split('T')[0]
+        query = query.gte('date', start).lte('date', dateEnd)
       }
 
       const { data, error } = await query

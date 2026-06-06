@@ -12,18 +12,29 @@ import { TopExpenses } from '@/components/dashboard/TopExpenses'
 import { NewTransactionSheet } from '@/components/transaction/NewTransactionSheet'
 import { useDashboardTransactions, useMonthlyEvolution } from '@/hooks/useTransactions'
 import { toCompetencia, addMonths, getMonthLabel } from '@/lib/categories'
-import type { ViewMode } from '@/lib/types'
+import type { ViewMode, PeriodMode } from '@/lib/types'
 
 export default function DashboardPage() {
   const [competencia, setCompetencia] = useState(toCompetencia(new Date()))
   const [viewMode, setViewMode] = useState<ViewMode>('competencia')
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [periodMode, setPeriodMode] = useState<PeriodMode>('month')
+  const [startComp, setStartComp] = useState(toCompetencia(new Date()))
+  const [endComp, setEndComp] = useState(toCompetencia(new Date()))
+  const [year, setYear] = useState(new Date().getFullYear())
+
+  const queryStart = periodMode === 'month'    ? competencia
+                   : periodMode === 'year'     ? `${year}-01-01`
+                   : startComp
+  const queryEnd   = periodMode === 'month'    ? competencia
+                   : periodMode === 'year'     ? `${year}-12-01`
+                   : endComp
 
   const prevCompetencia = addMonths(competencia, -1)
 
-  const { data: txCurrent = [] } = useDashboardTransactions(competencia, viewMode)
-  const { data: txPrev = [] } = useDashboardTransactions(prevCompetencia, viewMode)
-  const { data: evolutionRaw = [] } = useMonthlyEvolution(6, viewMode)
+  const { data: txCurrent = [] } = useDashboardTransactions(queryStart, queryEnd, viewMode)
+  const { data: txPrev = [] } = useDashboardTransactions(prevCompetencia, prevCompetencia, viewMode)
+  const { data: evolutionRaw = [] } = useMonthlyEvolution(queryStart, queryEnd, viewMode)
 
   const totalExpenses = useMemo(
     () => txCurrent.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
@@ -86,18 +97,30 @@ export default function DashboardPage() {
         viewMode={viewMode}
         onChangeCompetencia={setCompetencia}
         onToggleViewMode={() => setViewMode(v => v === 'competencia' ? 'caixa' : 'competencia')}
+        periodMode={periodMode}
+        onChangePeriodMode={setPeriodMode}
+        startComp={startComp}
+        endComp={endComp}
+        onChangeStartComp={setStartComp}
+        onChangeEndComp={setEndComp}
+        year={year}
+        onChangeYear={setYear}
       />
 
-      <HeroCard totalExpenses={totalExpenses} prevMonthExpenses={prevExpenses} />
+      <HeroCard
+        totalExpenses={totalExpenses}
+        prevMonthExpenses={periodMode === 'month' ? prevExpenses : undefined}
+        label={periodMode === 'month' ? 'Gasto no mês' : periodMode === 'year' ? `Gasto em ${year}` : 'Gasto no período'}
+      />
 
       <SummaryCards
         totalIncome={totalIncome}
         balance={balance}
-        prevMonthIncome={prevIncome}
-        prevMonthBalance={prevBalance}
+        prevMonthIncome={periodMode === 'month' ? prevIncome : undefined}
+        prevMonthBalance={periodMode === 'month' ? prevBalance : undefined}
       />
 
-      <CategoryBars expensesByCategory={expensesByCategory} totalExpenses={totalExpenses} />
+      <CategoryBars expensesByCategory={expensesByCategory} totalExpenses={totalExpenses} transactions={txCurrent} />
 
       <MonthlyChart data={monthlyEvolution} currentMonth={competencia} />
 

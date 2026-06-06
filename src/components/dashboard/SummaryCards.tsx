@@ -4,13 +4,15 @@ import { cn } from '@/lib/utils'
 interface Props {
   totalIncome: number
   balance: number
-  prevMonthIncome: number
-  prevMonthBalance: number
+  prevMonthIncome?: number
+  prevMonthBalance?: number
 }
 
 export function SummaryCards({ totalIncome, balance, prevMonthIncome, prevMonthBalance }: Props) {
-  const incPct = prevMonthIncome > 0 ? ((totalIncome - prevMonthIncome) / prevMonthIncome) * 100 : null
-  const balPct = prevMonthBalance !== 0 ? ((balance - prevMonthBalance) / Math.abs(prevMonthBalance)) * 100 : null
+  const incPct = prevMonthIncome !== undefined && prevMonthIncome > 0
+    ? ((totalIncome - prevMonthIncome) / prevMonthIncome) * 100 : null
+  const balPct = prevMonthBalance !== undefined && prevMonthBalance !== 0
+    ? ((balance - prevMonthBalance) / Math.abs(prevMonthBalance)) * 100 : null
 
   return (
     <div className="grid grid-cols-2 gap-3 mb-5">

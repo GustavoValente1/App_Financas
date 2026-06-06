@@ -4,18 +4,19 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 
 interface Props {
   totalExpenses: number
-  prevMonthExpenses: number
+  prevMonthExpenses?: number
+  label?: string
 }
 
-export function HeroCard({ totalExpenses, prevMonthExpenses }: Props) {
-  const hasComparison = prevMonthExpenses > 0
-  const pct = hasComparison ? ((totalExpenses - prevMonthExpenses) / prevMonthExpenses) * 100 : 0
+export function HeroCard({ totalExpenses, prevMonthExpenses, label = 'Gasto no mês' }: Props) {
+  const hasComparison = prevMonthExpenses !== undefined && prevMonthExpenses > 0
+  const pct = hasComparison ? ((totalExpenses - prevMonthExpenses!) / prevMonthExpenses!) * 100 : 0
   const isUp = pct > 0
   const isDown = pct < 0
 
   return (
     <div className="bg-card rounded-2xl p-5 shadow-sm mb-3">
-      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Gasto no mês</p>
+      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{label}</p>
       <p className="text-4xl font-semibold text-foreground leading-none mb-2">
         {formatCurrency(totalExpenses)}
       </p>

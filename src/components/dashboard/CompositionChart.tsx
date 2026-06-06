@@ -1,7 +1,7 @@
 'use client'
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { getCategoryColor } from '@/lib/categories'
+import { getCategoryColor, formatCurrency } from '@/lib/categories'
 import type { Category } from '@/lib/types'
 
 interface Props {
@@ -63,7 +63,10 @@ export function CompositionChart({ expensesByCategory, totalExpenses, monthLabel
                   <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
                   <span className="text-foreground">{d.name}</span>
                 </div>
-                <span className="text-muted-foreground font-medium">{pct.toFixed(0)}%</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{formatCurrency(d.value)}</span>
+                  <span className="text-muted-foreground font-medium w-7 text-right">{pct.toFixed(0)}%</span>
+                </div>
               </div>
             )
           })}

@@ -55,3 +55,4 @@ export interface DashboardData {
 }
 
 export type ViewMode = 'competencia' | 'caixa'
+export type PeriodMode = 'month' | 'interval' | 'year'

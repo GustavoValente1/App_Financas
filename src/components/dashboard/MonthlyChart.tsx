@@ -1,11 +1,12 @@
 'use client'
 
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { getMonthLabel, formatCurrency } from '@/lib/categories'
 
 interface MonthData {
   month: string
   expenses: number
+  income: number
 }
 
 interface Props {
@@ -16,55 +17,55 @@ interface Props {
 export function MonthlyChart({ data, currentMonth }: Props) {
   if (!data.length) return null
 
-  const min = Math.min(...data.map(d => d.expenses))
-  const max = Math.max(...data.map(d => d.expenses))
-  const minMonth = data.find(d => d.expenses === min)?.month
-  const maxMonth = data.find(d => d.expenses === max)?.month
-
   const chartData = data.map(d => ({
     label: getMonthLabel(d.month),
-    value: d.expenses,
+    despesas: d.expenses,
+    receitas: d.income,
     month: d.month,
   }))
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null
+    return (
+      <div className="bg-foreground text-background text-xs px-3 py-2 rounded-lg shadow-md space-y-1">
+        <p className="font-medium mb-1">{label}</p>
+        {payload.map((p: any) => (
+          <p key={p.dataKey}>
+            {p.dataKey === 'receitas' ? 'Receitas' : 'Despesas'}: {formatCurrency(p.value)}
+          </p>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="bg-card rounded-2xl p-5 shadow-sm mb-3">
       <p className="text-xs text-muted-foreground uppercase tracking-wide mb-4">Evolução mensal</p>
-      <ResponsiveContainer width="100%" height={140}>
-        <BarChart data={chartData} barCategoryGap="30%">
+      <ResponsiveContainer width="100%" height={150}>
+        <BarChart data={chartData} barCategoryGap="25%" barGap={2}>
           <XAxis
             dataKey="label"
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 11, fill: '#888' }}
           />
-          <Tooltip
-            cursor={{ fill: 'transparent' }}
-            content={({ active, payload }) => {
-              if (!active || !payload?.length) return null
-              return (
-                <div className="bg-foreground text-background text-xs px-2 py-1 rounded-lg shadow-md">
-                  {formatCurrency(payload[0].value as number)}
-                </div>
-              )
-            }}
+          <Tooltip cursor={{ fill: 'transparent' }} content={<CustomTooltip />} />
+          <Bar dataKey="receitas" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={18} />
+          <Bar dataKey="despesas" radius={[3, 3, 0, 0]} maxBarSize={18}
+            fill="#c4b5fd"
           />
-          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-            {chartData.map(d => (
-              <Cell
-                key={d.month}
-                fill={d.month === currentMonth ? '#4c1d95' : '#c4b5fd'}
-              />
-            ))}
-          </Bar>
         </BarChart>
       </ResponsiveContainer>
-      {(minMonth || maxMonth) && (
-        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-          <span>menor: {formatCurrency(min)} ({getMonthLabel(minMonth ?? '')})</span>
-          <span>maior: {formatCurrency(max)} ({getMonthLabel(maxMonth ?? '')})</span>
-        </div>
-      )}
+      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-400" />
+          Receitas
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-violet-300" />
+          Despesas
+        </span>
+      </div>
     </div>
   )
 }

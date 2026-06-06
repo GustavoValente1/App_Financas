@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { useCategories, usePaymentSources, useIncomeSources } from '@/hooks/useCategories'
 import { useUpsertTransaction } from '@/hooks/useTransactions'
-import { toCompetencia, getCategoryColor } from '@/lib/categories'
+import { getCategoryColor } from '@/lib/categories'
 import type { Transaction } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -19,7 +19,7 @@ interface Props {
 
 export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Props) {
   const today = new Date().toISOString().split('T')[0]
-  const currentCompetencia = toCompetencia(new Date())
+  const currentMonth = today.slice(0, 7) + '-01'
 
   const isEditing = !!editTransaction
 
@@ -30,7 +30,7 @@ export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Pro
   const [amount, setAmount] = useState(editTransaction ? String(editTransaction.amount) : '')
   const [description, setDescription] = useState(editTransaction?.description ?? '')
   const [date, setDate] = useState(editTransaction?.date ?? today)
-  const [competencia, setCompetencia] = useState(editTransaction?.competencia ?? currentCompetencia)
+  const [competencia, setCompetencia] = useState(editTransaction?.competencia ?? currentMonth)
   const [expanded, setExpanded] = useState(false)
 
   const { data: categories = [] } = useCategories()
@@ -48,7 +48,7 @@ export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Pro
     setAmount('')
     setDescription('')
     setDate(today)
-    setCompetencia(currentCompetencia)
+    setCompetencia(currentMonth)
     setExpanded(false)
   }
 
@@ -220,14 +220,14 @@ export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Pro
               />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">Data</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">Data pagamento</p>
               <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">
                 Competência
               </p>
-              <Input type="month" value={competencia.slice(0, 7)} onChange={e => setCompetencia(e.target.value + '-01')} />
+              <Input type="date" value={competencia} onChange={e => setCompetencia(e.target.value.slice(0, 7) + '-01')} />
             </div>
             {type === 'expense' && (
               <div>
