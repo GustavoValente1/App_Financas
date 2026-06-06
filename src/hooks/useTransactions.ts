@@ -157,6 +157,31 @@ export function useUpsertTransaction() {
   })
 }
 
+export function useYearTransactions(year: number, viewMode: ViewMode) {
+  return useQuery({
+    queryKey: ['year-transactions', year, viewMode],
+    queryFn: async () => {
+      const supabase = createClient()
+      const start = `${year}-01-01`
+      const end = `${year}-12-31`
+
+      let query = supabase
+        .from('transactions')
+        .select(TRANSACTION_SELECT)
+
+      if (viewMode === 'competencia') {
+        query = query.gte('competencia', start).lte('competencia', end)
+      } else {
+        query = query.gte('date', start).lte('date', end)
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      return data as Transaction[]
+    },
+  })
+}
+
 export function useDeleteTransaction() {
   const qc = useQueryClient()
   return useMutation({

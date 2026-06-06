@@ -80,6 +80,7 @@ export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Pro
     if (!numAmount || numAmount <= 0) return
     if (type === 'expense' && !subcategoryId) return
     if (type === 'income' && !incomeSourceId) return
+    if (type === 'income' && !paymentSourceId) return
 
     await upsert.mutateAsync({
       id: editTransaction?.id,
@@ -90,7 +91,9 @@ export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Pro
       competencia: competencia + '-01',
       subcategory_id: type === 'expense' ? subcategoryId : null,
       income_source_id: type === 'income' ? incomeSourceId : null,
-      payment_source_id: type === 'expense' ? (paymentSourceId || defaultPaymentSource?.id || null) : null,
+      payment_source_id: type === 'expense'
+        ? (paymentSourceId || defaultPaymentSource?.id || null)
+        : (paymentSourceId || null),
     })
 
     close()
@@ -205,19 +208,36 @@ export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Pro
               </Select>
             </div>
           ) : (
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">Origem da receita</p>
-              <Select value={incomeSourceId || undefined} onValueChange={v => setIncomeSourceId(v ?? '')}>
-                <SelectTrigger className="w-full h-10">
-                  <SelectValue placeholder="Selecionar origem…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {incomeSources.map(src => (
-                    <SelectItem key={src.id} value={src.id}>{src.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">Origem da receita</p>
+                <Select value={incomeSourceId || undefined} onValueChange={v => setIncomeSourceId(v ?? '')}>
+                  <SelectTrigger className="w-full h-10">
+                    <SelectValue placeholder="Selecionar origem…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {incomeSources.map(src => (
+                      <SelectItem key={src.id} value={src.id}>{src.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">
+                  Conta de destino <span className="text-destructive">*</span>
+                </p>
+                <Select value={paymentSourceId || undefined} onValueChange={v => setPaymentSourceId(v ?? '')}>
+                  <SelectTrigger className="w-full h-10">
+                    <SelectValue placeholder="Em qual conta chegou o dinheiro…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentSources.map(src => (
+                      <SelectItem key={src.id} value={src.id}>{src.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
           )}
 
           {/* Fonte (despesas) */}

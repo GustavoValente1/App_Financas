@@ -22,7 +22,7 @@ O campo `payment_source_id` já existe na tabela `transactions` mas só é usado
 ### Solução
 - **Nenhuma mudança de schema** — `payment_source_id` já é nullable na tabela
 - **`NewTransactionSheet`**: adicionar campo "Conta de destino" no formulário de receitas, usando o mesmo Select de fontes das despesas
-- Campo fica após "Descrição", não é obrigatório (para não quebrar o fluxo rápido de entrada)
+- Campo fica após "Descrição" e é **obrigatório** — sem ele não é possível calcular o saldo da conta na Conferência; o botão Salvar fica desabilitado enquanto não selecionado
 - **Receitas existentes sem fonte**: após implementação, identificar transações de receita com `payment_source_id = null` e atualizar via SQL com base na confirmação do usuário
 
 ---
