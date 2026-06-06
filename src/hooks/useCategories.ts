@@ -127,3 +127,26 @@ export function useDeleteIncomeSource() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['income_sources'] }),
   })
 }
+
+export function useDeleteSubcategoryWithReassign() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, targetId }: { id: string; targetId: string | null }) => {
+      const supabase = createClient()
+      const { error: updateError } = await supabase
+        .from('transactions')
+        .update({ subcategory_id: targetId })
+        .eq('subcategory_id', id)
+      if (updateError) throw updateError
+      const { error } = await supabase.from('subcategories').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] })
+      qc.invalidateQueries({ queryKey: ['subcategories'] })
+      qc.invalidateQueries({ queryKey: ['transactions'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+      qc.invalidateQueries({ queryKey: ['monthly-evolution'] })
+    },
+  })
+}

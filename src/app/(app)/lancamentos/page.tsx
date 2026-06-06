@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Search, X, SlidersHorizontal, Plus } from 'lucide-react'
+import { useState, useMemo, useRef } from 'react'
+import { Search, X, Plus, Trash2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { NewTransactionSheet } from '@/components/transaction/NewTransactionSheet'
 import { useTransactions, useDeleteTransaction } from '@/hooks/useTransactions'
@@ -19,12 +19,96 @@ function useDebounce<T>(value: T, delay = 300): T {
   return debounced
 }
 
+function formatDateBR(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-')
+  return `${d}/${m}/${y}`
+}
+
+function SwipeableRow({
+  children,
+  onDelete,
+  onClick,
+}: {
+  children: React.ReactNode
+  onDelete: () => void
+  onClick: () => void
+}) {
+  const [offset, setOffset] = useState(0)
+  const [released, setReleased] = useState(true)
+  const startX = useRef(0)
+  const startY = useRef(0)
+  const dragging = useRef(false)
+  const DELETE_WIDTH = 72
+
+  function handleTouchStart(e: React.TouchEvent) {
+    startX.current = e.touches[0].clientX
+    startY.current = e.touches[0].clientY
+    dragging.current = false
+    setReleased(false)
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    const dx = e.touches[0].clientX - startX.current
+    const dy = e.touches[0].clientY - startY.current
+    if (!dragging.current) {
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+        dragging.current = true
+      } else {
+        return
+      }
+    }
+    if (dx < 0) setOffset(Math.max(dx, -DELETE_WIDTH))
+  }
+
+  function handleTouchEnd() {
+    setReleased(true)
+    setOffset(prev => (prev <= -DELETE_WIDTH * 0.5 ? -DELETE_WIDTH : 0))
+  }
+
+  function handleClick() {
+    if (dragging.current || offset !== 0) {
+      setOffset(0)
+      return
+    }
+    onClick()
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl">
+      <div
+        className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-red-500 rounded-r-2xl"
+        style={{ width: DELETE_WIDTH }}
+      >
+        <button
+          onClick={e => { e.stopPropagation(); onDelete() }}
+          className="flex flex-col items-center justify-center gap-1 text-white w-full h-full"
+        >
+          <Trash2 size={18} />
+          <span className="text-xs font-medium">Excluir</span>
+        </button>
+      </div>
+      <div
+        style={{
+          transform: `translateX(${offset}px)`,
+          transition: released ? 'transform 0.2s ease-out' : 'none',
+          touchAction: 'pan-y',
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={handleClick}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
 export default function LancamentosPage() {
   const [search, setSearch] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedSourceId, setSelectedSourceId] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
   const [editTx, setEditTx] = useState<Transaction | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
 
@@ -62,11 +146,6 @@ export default function LancamentosPage() {
     setSheetOpen(true)
   }
 
-  async function handleDelete(tx: Transaction) {
-    if (!confirm(`Excluir "${tx.description || tx.subcategory?.name || 'lançamento'}"?`)) return
-    await deleteTx.mutateAsync(tx.id)
-  }
-
   function clearFilters() {
     setSearch('')
     setSelectedMonth('')
@@ -94,7 +173,6 @@ export default function LancamentosPage() {
 
       {/* Filter chips */}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
-        {/* Month chip */}
         <select
           value={selectedMonth}
           onChange={e => setSelectedMonth(e.target.value)}
@@ -109,7 +187,6 @@ export default function LancamentosPage() {
           ))}
         </select>
 
-        {/* Category chip */}
         <select
           value={selectedCategoryId}
           onChange={e => setSelectedCategoryId(e.target.value)}
@@ -127,7 +204,6 @@ export default function LancamentosPage() {
           ))}
         </select>
 
-        {/* Source chip */}
         <select
           value={selectedSourceId}
           onChange={e => setSelectedSourceId(e.target.value)}
@@ -178,37 +254,39 @@ export default function LancamentosPage() {
               ? getCategoryIcon(tx.subcategory.category.name)
               : '💰'
             return (
-              <div
+              <SwipeableRow
                 key={tx.id}
-                className="bg-card rounded-2xl px-4 py-3.5 shadow-sm flex items-center gap-3 cursor-pointer active:opacity-70 transition-opacity"
+                onDelete={() => deleteTx.mutateAsync(tx.id)}
                 onClick={() => openEdit(tx)}
               >
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-base flex-shrink-0"
-                  style={{ backgroundColor: catColor + '20' }}
-                >
-                  {tx.type === 'income' ? '💰' : catIcon}
+                <div className="bg-card rounded-2xl px-4 py-3.5 shadow-sm flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-base flex-shrink-0"
+                    style={{ backgroundColor: catColor + '20' }}
+                  >
+                    {tx.type === 'income' ? '💰' : catIcon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {tx.description || tx.subcategory?.name || tx.income_source?.name || '—'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {tx.type === 'expense'
+                        ? `${tx.subcategory?.category?.name ?? ''} · ${tx.subcategory?.name ?? ''} · ${formatDateBR(tx.date)}`
+                        : `${tx.income_source?.name ?? 'Receita'} · ${formatDateBR(tx.date)}`
+                      }
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className={cn(
+                      'text-sm font-medium',
+                      tx.type === 'income' ? 'text-green-600' : 'text-foreground'
+                    )}>
+                      {tx.type === 'income' ? '+' : ''}{formatCurrency(tx.amount)}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {tx.description || tx.subcategory?.name || tx.income_source?.name || '—'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {tx.type === 'expense'
-                      ? `${tx.subcategory?.category?.name ?? ''} · ${tx.subcategory?.name ?? ''} · ${tx.date}`
-                      : `${tx.income_source?.name ?? 'Receita'} · ${tx.date}`
-                    }
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className={cn(
-                    'text-sm font-medium',
-                    tx.type === 'income' ? 'text-green-600' : 'text-foreground'
-                  )}>
-                    {tx.type === 'income' ? '+' : ''}{formatCurrency(tx.amount)}
-                  </p>
-                </div>
-              </div>
+              </SwipeableRow>
             )
           })}
         </div>
