@@ -6,7 +6,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen">
       <Sidebar />
       <main className="md:ml-56 pb-20 md:pb-0">
-        <div className="max-w-lg mx-auto px-4 py-5 md:px-6">
+        <div className="max-w-lg md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-5 md:px-6">
           {children}
         </div>
       </main>

@@ -21,10 +21,52 @@ import {
   useDeletePaymentSource,
   useAddIncomeSource,
   useDeleteIncomeSource,
+  useUpdateIncomeSourceGoal,
 } from '@/hooks/useCategories'
 import { getCategoryColor, getCategoryIcon } from '@/lib/categories'
 import { cn } from '@/lib/utils'
-import type { Subcategory } from '@/lib/types'
+import type { Subcategory, IncomeSource } from '@/lib/types'
+
+function formatGoal(value: number | null): string {
+  if (value === null) return ''
+  return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function parseGoal(val: string): number | null {
+  const trimmed = val.trim()
+  if (!trimmed) return null
+  const num = parseFloat(trimmed.replace(/\./g, '').replace(',', '.'))
+  return Number.isFinite(num) && num > 0 ? num : null
+}
+
+function IncomeGoalInput({ source }: { source: IncomeSource }) {
+  const [value, setValue] = useState(formatGoal(source.monthly_goal))
+  const updateGoal = useUpdateIncomeSourceGoal()
+
+  function commit() {
+    const parsed = parseGoal(value)
+    setValue(formatGoal(parsed))
+    if (parsed !== source.monthly_goal) {
+      updateGoal.mutate({ id: source.id, monthly_goal: parsed })
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-xs text-muted-foreground">Meta mensal R$</span>
+      <Input
+        type="text"
+        inputMode="decimal"
+        placeholder="0,00"
+        value={value}
+        onChange={e => setValue(e.target.value.replace(/[^0-9.,]/g, ''))}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+        className="h-8 w-28 text-sm"
+      />
+    </div>
+  )
+}
 
 export default function CadastrosPage() {
   return (
@@ -239,9 +281,12 @@ function SimpleListTab({ type }: { type: 'payment_sources' | 'income_sources' })
         {items.map(item => (
           <div
             key={item.id}
-            className="bg-card rounded-2xl px-4 py-3.5 shadow-sm flex items-center justify-between"
+            className="bg-card rounded-2xl px-4 py-3.5 shadow-sm flex items-center justify-between gap-3"
           >
-            <span className="text-sm font-medium">{item.name}</span>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium">{item.name}</span>
+              {!isPayment && <IncomeGoalInput source={item as IncomeSource} />}
+            </div>
             <button
               onClick={() => setConfirmItem({ id: item.id, name: item.name })}
               className="text-muted-foreground hover:text-destructive transition-colors"

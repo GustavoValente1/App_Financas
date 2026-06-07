@@ -4,6 +4,11 @@ import type { Transaction, ViewMode } from '@/lib/types'
 import { toCompetencia } from '@/lib/categories'
 import type { ImportRow } from '@/lib/transactionsExcel'
 
+function monthEnd(competencia: string): string {
+  const [y, m] = competencia.split('-').map(Number)
+  return new Date(y, m, 0).toISOString().split('T')[0]
+}
+
 const TRANSACTION_SELECT = `
   *,
   subcategory:subcategories(*, category:categories(*)),
@@ -78,7 +83,7 @@ export function useDashboardTransactions(start: string, end: string, viewMode: V
         .select(TRANSACTION_SELECT)
 
       if (viewMode === 'competencia') {
-        query = query.gte('competencia', start).lte('competencia', end)
+        query = query.gte('competencia', start).lte('competencia', monthEnd(end))
       } else {
         const [ey, em] = end.split('-').map(Number)
         const dateEnd = new Date(ey, em, 0).toISOString().split('T')[0]
@@ -103,7 +108,7 @@ export function useMonthlyEvolution(start: string, end: string, viewMode: ViewMo
         .select('type, amount, competencia, date')
 
       if (viewMode === 'competencia') {
-        query = query.gte('competencia', start).lte('competencia', end)
+        query = query.gte('competencia', start).lte('competencia', monthEnd(end))
       } else {
         const [ey, em] = end.split('-').map(Number)
         const dateEnd = new Date(ey, em, 0).toISOString().split('T')[0]
@@ -171,7 +176,7 @@ export function useYearTransactions(year: number, viewMode: ViewMode) {
         .select(TRANSACTION_SELECT)
 
       if (viewMode === 'competencia') {
-        query = query.gte('competencia', start).lte('competencia', end)
+        query = query.gte('competencia', start).lte('competencia', monthEnd(end))
       } else {
         query = query.gte('date', start).lte('date', end)
       }

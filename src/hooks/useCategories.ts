@@ -116,6 +116,18 @@ export function useAddIncomeSource() {
   })
 }
 
+export function useUpdateIncomeSourceGoal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, monthly_goal }: { id: string; monthly_goal: number | null }) => {
+      const supabase = createClient()
+      const { error } = await supabase.from('income_sources').update({ monthly_goal }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['income_sources'] }),
+  })
+}
+
 export function useDeleteIncomeSource() {
   const qc = useQueryClient()
   return useMutation({

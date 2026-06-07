@@ -22,6 +22,7 @@ export interface PaymentSource {
 export interface IncomeSource {
   id: string
   name: string
+  monthly_goal: number | null
 }
 
 export type TransactionType = 'expense' | 'income'

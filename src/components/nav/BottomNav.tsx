@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, List, BarChart2, Settings2 } from 'lucide-react'
+import { LayoutDashboard, List, BarChart2, Settings2, Wallet } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const items = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/lancamentos', label: 'Lançamentos', icon: List },
+  { href: '/entradas', label: 'Entradas', icon: Wallet },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart2 },
   { href: '/cadastros', label: 'Cadastros', icon: Settings2 },
 ]

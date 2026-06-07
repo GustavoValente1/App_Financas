@@ -29,10 +29,14 @@ create table if not exists payment_sources (
 
 -- Income sources
 create table if not exists income_sources (
-  id         uuid primary key default gen_random_uuid(),
-  name       text not null,
-  created_at timestamptz default now()
+  id           uuid primary key default gen_random_uuid(),
+  name         text not null,
+  monthly_goal numeric(12, 2),
+  created_at   timestamptz default now()
 );
+
+-- Migration: add monthly_goal to existing income_sources tables
+alter table income_sources add column if not exists monthly_goal numeric(12, 2);
 
 -- Transactions
 create table if not exists transactions (
