@@ -25,6 +25,15 @@ function formatDateBR(dateStr: string): string {
   return `${d}/${m}/${y}`
 }
 
+type SortOption = 'date_desc' | 'date_asc' | 'competencia_desc' | 'competencia_asc'
+
+const SORT_LABELS: Record<SortOption, string> = {
+  date_desc: 'Data de caixa (mais recente)',
+  date_asc: 'Data de caixa (mais antiga)',
+  competencia_desc: 'Competência (mais recente)',
+  competencia_asc: 'Competência (mais antiga)',
+}
+
 function SwipeableRow({
   children,
   onDelete,
@@ -120,6 +129,7 @@ export default function LancamentosPage() {
   const [selectedMonth, setSelectedMonth] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedSourceId, setSelectedSourceId] = useState('')
+  const [sortBy, setSortBy] = useState<SortOption>('date_desc')
   const [editTx, setEditTx] = useState<Transaction | null>(null)
   const [cloneFromTx, setCloneFromTx] = useState<Transaction | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -141,6 +151,15 @@ export default function LancamentosPage() {
     () => allTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
     [allTransactions]
   )
+
+  const sortedTransactions = useMemo(() => {
+    const field = sortBy.startsWith('competencia') ? 'competencia' : 'date'
+    const ascending = sortBy.endsWith('asc')
+    return [...allTransactions].sort((a, b) => {
+      const cmp = a[field].localeCompare(b[field])
+      return ascending ? cmp : -cmp
+    })
+  }, [allTransactions, sortBy])
 
   const hasActiveFilter = !!(debouncedSearch || selectedMonth || selectedCategoryId || selectedSourceId)
 
@@ -240,6 +259,16 @@ export default function LancamentosPage() {
           ))}
         </select>
 
+        <select
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value as SortOption)}
+          className="text-sm border rounded-full px-3 py-1.5 bg-card cursor-pointer outline-none border-border text-muted-foreground"
+        >
+          {(Object.keys(SORT_LABELS) as SortOption[]).map(opt => (
+            <option key={opt} value={opt}>{SORT_LABELS[opt]}</option>
+          ))}
+        </select>
+
         {hasActiveFilter && (
           <button onClick={clearFilters} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
             <X size={12} /> Limpar
@@ -268,7 +297,7 @@ export default function LancamentosPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {allTransactions.map(tx => {
+          {sortedTransactions.map(tx => {
             const catColor = tx.subcategory?.category
               ? getCategoryColor(tx.subcategory.category.name)
               : '#94a3b8'
