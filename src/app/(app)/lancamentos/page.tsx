@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useMemo, useRef } from 'react'
-import { Search, X, Plus, Trash2 } from 'lucide-react'
+import { Search, X, Plus, Trash2, Copy } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { NewTransactionSheet } from '@/components/transaction/NewTransactionSheet'
+import { ImportExportControls } from '@/components/transaction/ImportExportControls'
 import { useTransactions, useDeleteTransaction } from '@/hooks/useTransactions'
 import { useCategories, usePaymentSources } from '@/hooks/useCategories'
 import { formatCurrency, getCategoryColor, getCategoryIcon, getMonthYearLabel, toCompetencia } from '@/lib/categories'
@@ -27,10 +28,12 @@ function formatDateBR(dateStr: string): string {
 function SwipeableRow({
   children,
   onDelete,
+  onClone,
   onClick,
 }: {
   children: React.ReactNode
   onDelete: () => void
+  onClone: () => void
   onClick: () => void
 }) {
   const [offset, setOffset] = useState(0)
@@ -38,7 +41,8 @@ function SwipeableRow({
   const startX = useRef(0)
   const startY = useRef(0)
   const dragging = useRef(false)
-  const DELETE_WIDTH = 72
+  const ACTION_WIDTH = 72
+  const REVEAL_WIDTH = ACTION_WIDTH * 2
 
   function handleTouchStart(e: React.TouchEvent) {
     startX.current = e.touches[0].clientX
@@ -57,12 +61,12 @@ function SwipeableRow({
         return
       }
     }
-    if (dx < 0) setOffset(Math.max(dx, -DELETE_WIDTH))
+    if (dx < 0) setOffset(Math.max(dx, -REVEAL_WIDTH))
   }
 
   function handleTouchEnd() {
     setReleased(true)
-    setOffset(prev => (prev <= -DELETE_WIDTH * 0.5 ? -DELETE_WIDTH : 0))
+    setOffset(prev => (prev <= -REVEAL_WIDTH * 0.5 ? -REVEAL_WIDTH : 0))
   }
 
   function handleClick() {
@@ -76,12 +80,19 @@ function SwipeableRow({
   return (
     <div className="relative overflow-hidden rounded-2xl">
       <div
-        className="absolute right-0 top-0 bottom-0 flex items-center justify-center bg-red-500 rounded-r-2xl"
-        style={{ width: DELETE_WIDTH }}
+        className="absolute right-0 top-0 bottom-0 flex items-stretch rounded-r-2xl overflow-hidden"
+        style={{ width: REVEAL_WIDTH }}
       >
         <button
+          onClick={e => { e.stopPropagation(); setOffset(0); onClone() }}
+          className="flex flex-col items-center justify-center gap-1 text-white w-full h-full bg-blue-500"
+        >
+          <Copy size={18} />
+          <span className="text-xs font-medium">Clonar</span>
+        </button>
+        <button
           onClick={e => { e.stopPropagation(); onDelete() }}
-          className="flex flex-col items-center justify-center gap-1 text-white w-full h-full"
+          className="flex flex-col items-center justify-center gap-1 text-white w-full h-full bg-red-500"
         >
           <Trash2 size={18} />
           <span className="text-xs font-medium">Excluir</span>
@@ -110,6 +121,7 @@ export default function LancamentosPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [selectedSourceId, setSelectedSourceId] = useState('')
   const [editTx, setEditTx] = useState<Transaction | null>(null)
+  const [cloneFromTx, setCloneFromTx] = useState<Transaction | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const debouncedSearch = useDebounce(search, 300)
@@ -142,7 +154,14 @@ export default function LancamentosPage() {
   }, [])
 
   function openEdit(tx: Transaction) {
+    setCloneFromTx(null)
     setEditTx(tx)
+    setSheetOpen(true)
+  }
+
+  function openClone(tx: Transaction) {
+    setEditTx(null)
+    setCloneFromTx(tx)
     setSheetOpen(true)
   }
 
@@ -155,9 +174,12 @@ export default function LancamentosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Lançamentos</h1>
-        <span className="text-sm text-muted-foreground">{allTransactions.length} itens</span>
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <h1 className="text-xl font-semibold">Lançamentos</h1>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">{allTransactions.length} itens</span>
+        </div>
+        <ImportExportControls />
       </div>
 
       {/* Search */}
@@ -257,6 +279,7 @@ export default function LancamentosPage() {
               <SwipeableRow
                 key={tx.id}
                 onDelete={() => deleteTx.mutateAsync(tx.id)}
+                onClone={() => openClone(tx)}
                 onClick={() => openEdit(tx)}
               >
                 <div className="bg-card rounded-2xl px-4 py-3.5 shadow-sm flex items-center gap-3">
@@ -294,7 +317,7 @@ export default function LancamentosPage() {
 
       {/* FAB */}
       <button
-        onClick={() => { setEditTx(null); setSheetOpen(true) }}
+        onClick={() => { setEditTx(null); setCloneFromTx(null); setSheetOpen(true) }}
         className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-30 flex items-center gap-2 bg-foreground text-background px-5 py-3.5 rounded-full shadow-lg text-sm font-medium hover:opacity-90 transition-opacity"
       >
         <Plus size={18} />
@@ -303,8 +326,10 @@ export default function LancamentosPage() {
 
       <NewTransactionSheet
         open={sheetOpen}
-        onOpenChange={v => { if (!v) setEditTx(null); setSheetOpen(v) }}
+        onOpenChange={v => { if (!v) { setEditTx(null); setCloneFromTx(null) }; setSheetOpen(v) }}
         editTransaction={editTx}
+        cloneFrom={cloneFromTx}
+        onClone={openClone}
       />
     </div>
   )

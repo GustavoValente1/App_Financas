@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { Transaction, ViewMode } from '@/lib/types'
 import { toCompetencia } from '@/lib/categories'
+import type { ImportRow } from '@/lib/transactionsExcel'
 
 const TRANSACTION_SELECT = `
   *,
@@ -178,6 +179,59 @@ export function useYearTransactions(year: number, viewMode: ViewMode) {
       const { data, error } = await query
       if (error) throw error
       return data as Transaction[]
+    },
+  })
+}
+
+export interface ImportSummary {
+  created: number
+  updated: number
+}
+
+export function useImportTransactions() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (rows: ImportRow[]): Promise<ImportSummary> => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const toUpdate = rows.filter(r => r.id)
+      const toInsert = rows.filter(r => !r.id)
+
+      for (const row of toUpdate) {
+        const { id, ...rest } = row
+        const { error } = await supabase
+          .from('transactions')
+          .update({ ...rest, user_id: user.id })
+          .eq('id', id)
+        if (error) throw error
+      }
+
+      if (toInsert.length > 0) {
+        const { error } = await supabase
+          .from('transactions')
+          .insert(toInsert.map(row => ({
+            type: row.type,
+            amount: row.amount,
+            description: row.description,
+            date: row.date,
+            competencia: row.competencia,
+            subcategory_id: row.subcategory_id,
+            income_source_id: row.income_source_id,
+            payment_source_id: row.payment_source_id,
+            user_id: user.id,
+          })))
+        if (error) throw error
+      }
+
+      return { created: toInsert.length, updated: toUpdate.length }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['transactions'] })
+      qc.invalidateQueries({ queryKey: ['dashboard'] })
+      qc.invalidateQueries({ queryKey: ['monthly-evolution'] })
+      qc.invalidateQueries({ queryKey: ['year-transactions'] })
     },
   })
 }

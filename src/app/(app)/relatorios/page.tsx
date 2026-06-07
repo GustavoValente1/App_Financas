@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle } from 'lucide-react'
 import { useCategories, usePaymentSources, useIncomeSources } from '@/hooks/useCategories'
 import { useYearTransactions, useTransactions } from '@/hooks/useTransactions'
-import { formatCurrency, toCompetencia, getMonthYearLabel } from '@/lib/categories'
+import { formatCurrency } from '@/lib/categories'
 import type { Transaction, ViewMode } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -251,16 +251,7 @@ function Conferencia() {
   const { data: paymentSources = [] } = usePaymentSources()
   const { data: allTransactions = [], isLoading } = useTransactions({})
 
-  const months = useMemo(() => {
-    const now = new Date()
-    return Array.from({ length: 24 }, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const val = toCompetencia(d)
-      return { value: val, label: getMonthYearLabel(val) }
-    })
-  }, [])
-
-  const [expandFilter, setExpandFilter] = useState('')
+  const [selectedDate, setSelectedDate] = useState('')
 
   const incomeWithoutSource = useMemo(
     () => allTransactions.filter(t => t.type === 'income' && !t.payment_source_id),
@@ -320,9 +311,9 @@ function Conferencia() {
               transactions={txs}
               balance={balance}
               lastDate={lastDate}
-              filterMonth={expandFilter}
-              months={months}
-              onFilterChange={setExpandFilter}
+              maxDate={today}
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
             />
           ))}
         </div>
@@ -336,30 +327,34 @@ function SourceCard({
   transactions,
   balance,
   lastDate,
-  filterMonth,
-  months,
-  onFilterChange,
+  maxDate,
+  selectedDate,
+  onDateChange,
 }: {
   name: string
   transactions: Transaction[]
   balance: number
   lastDate: string
-  filterMonth: string
-  months: { value: string; label: string }[]
-  onFilterChange: (v: string) => void
+  maxDate: string
+  selectedDate: string
+  onDateChange: (v: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
 
-  const visibleTxs = useMemo(() => {
-    let txs = [...transactions].sort((a, b) => a.date.localeCompare(b.date))
-    if (filterMonth) {
-      const [y, m] = filterMonth.split('-').map(Number)
-      const start = filterMonth
-      const end = new Date(y, m, 0).toISOString().split('T')[0]
-      txs = txs.filter(tx => tx.date >= start && tx.date <= end)
-    }
-    return txs
-  }, [transactions, filterMonth])
+  const sortedTxs = useMemo(
+    () => [...transactions].sort((a, b) => a.date.localeCompare(b.date)),
+    [transactions]
+  )
+
+  const asOf = useMemo(() => {
+    if (!selectedDate) return null
+    const txs = sortedTxs.filter(tx => tx.date <= selectedDate)
+    const balanceAsOf = txs.reduce((s, tx) => s + (tx.type === 'income' ? tx.amount : -tx.amount), 0)
+    return { txs, balance: balanceAsOf }
+  }, [sortedTxs, selectedDate])
+
+  const visibleTxs = asOf ? asOf.txs : sortedTxs
+  const displayBalance = asOf ? asOf.balance : balance
 
   return (
     <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
@@ -370,14 +365,14 @@ function SourceCard({
         <div className="text-left">
           <p className="text-sm font-medium">{name}</p>
           <p className="text-xs text-muted-foreground">
-            Última atualização: {lastDate ? formatDateBR(lastDate) : '—'}
+            {asOf ? `Saldo em: ${formatDateBR(selectedDate)}` : `Última atualização: ${lastDate ? formatDateBR(lastDate) : '—'}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Saldo</p>
-            <p className={cn('text-sm font-semibold', balance < 0 ? 'text-red-600' : 'text-foreground')}>
-              {formatCurrency(balance)}
+            <p className={cn('text-sm font-semibold', displayBalance < 0 ? 'text-red-600' : 'text-foreground')}>
+              {formatCurrency(displayBalance)}
             </p>
           </div>
           <ChevronDown size={16} className={cn('text-muted-foreground transition-transform', expanded && 'rotate-180')} />
@@ -386,19 +381,24 @@ function SourceCard({
 
       {expanded && (
         <div className="border-t border-border">
-          {/* Period filter inside card */}
+          {/* Date filter inside card */}
           <div className="px-4 py-2.5 border-b border-border/50 flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Período:</span>
-            <select
-              value={filterMonth}
-              onChange={e => onFilterChange(e.target.value)}
+            <span className="text-xs text-muted-foreground">Ver saldo em:</span>
+            <input
+              type="date"
+              value={selectedDate}
+              max={maxDate}
+              onChange={e => onDateChange(e.target.value)}
               className="text-xs border rounded-full px-2.5 py-1 bg-background cursor-pointer outline-none border-border"
-            >
-              <option value="">Todo o histórico</option>
-              {months.map(m => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
+            />
+            {selectedDate && (
+              <button
+                onClick={() => onDateChange('')}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Limpar
+              </button>
+            )}
           </div>
 
           {visibleTxs.length === 0 ? (

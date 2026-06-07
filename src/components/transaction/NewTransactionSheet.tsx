@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { Trash2, X } from 'lucide-react'
+import { Trash2, Copy, X } from 'lucide-react'
 import { useCategories, usePaymentSources, useIncomeSources } from '@/hooks/useCategories'
 import { useUpsertTransaction, useDeleteTransaction } from '@/hooks/useTransactions'
 import { getCategoryColor, getCategoryIcon } from '@/lib/categories'
@@ -18,6 +18,8 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   editTransaction?: Transaction | null
+  cloneFrom?: Transaction | null
+  onClone?: (tx: Transaction) => void
 }
 
 function formatAmt(num: number): string {
@@ -28,7 +30,7 @@ function parseAmt(val: string): number {
   return parseFloat(val.replace(/\./g, '').replace(',', '.')) || 0
 }
 
-export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Props) {
+export function NewTransactionSheet({ open, onOpenChange, editTransaction, cloneFrom, onClone }: Props) {
   const today = new Date().toISOString().split('T')[0]
 
   const [type, setType] = useState<'expense' | 'income'>('expense')
@@ -65,17 +67,18 @@ export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Pro
 
   useEffect(() => {
     if (!open) return
-    setType(editTransaction?.type ?? 'expense')
-    setSubcategoryId(editTransaction?.subcategory_id ?? '')
-    setIncomeSourceId(editTransaction?.income_source_id ?? '')
-    setPaymentSourceId(editTransaction?.payment_source_id ?? '')
-    setAmountDisplay(editTransaction ? formatAmt(editTransaction.amount) : '')
-    setDescription(editTransaction?.description ?? '')
-    setDate(editTransaction?.date ?? today)
-    setCompetencia(editTransaction ? editTransaction.competencia.slice(0, 10) : today)
+    const source = editTransaction ?? cloneFrom ?? null
+    setType(source?.type ?? 'expense')
+    setSubcategoryId(source?.subcategory_id ?? '')
+    setIncomeSourceId(source?.income_source_id ?? '')
+    setPaymentSourceId(source?.payment_source_id ?? '')
+    setAmountDisplay(source ? formatAmt(source.amount) : '')
+    setDescription(source?.description ?? '')
+    setDate(source?.date ?? today)
+    setCompetencia(source ? source.competencia.slice(0, 10) : today)
     setErrors({})
     setErrorMessage('')
-  }, [open, editTransaction?.id])
+  }, [open, editTransaction?.id, cloneFrom?.id])
 
   function handleAmountBlur() {
     const num = parseAmt(amountDisplay)
@@ -135,12 +138,20 @@ export function NewTransactionSheet({ open, onOpenChange, editTransaction }: Pro
 
   return (
     <Sheet open={open} onOpenChange={v => { if (!v) close() }}>
-      <SheetContent side="bottom" className="rounded-t-2xl max-h-[90vh] overflow-y-auto px-4 pb-8">
+      <SheetContent side="bottom" showCloseButton={false} className="rounded-t-2xl max-h-[90vh] overflow-y-auto px-4 pb-8">
         <SheetHeader className="flex-row items-center justify-between mb-4">
           <SheetTitle className="text-base font-medium">
             {isEditing ? 'Editar lançamento' : 'Novo lançamento'}
           </SheetTitle>
           <div className="flex items-center gap-2">
+            {isEditing && onClone && (
+              <button
+                onClick={() => onClone(editTransaction!)}
+                className="p-1 text-muted-foreground hover:opacity-70 transition-opacity"
+              >
+                <Copy size={18} />
+              </button>
+            )}
             {isEditing && (
               <button
                 onClick={handleDelete}
