@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blueprint — Finanças da Casa</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F8F5F0;
+  --bg-dots: #E5DDD2;
+  --surface: #FFFFFF;
+  --surface-2: #F4F0EA;
+  --ink: #1C1713;
+  --ink-2: #665E54;
+  --ink-3: #AFA69A;
+  --border: #E3DDD5;
+  --border-2: #CFC8BE;
+
+  --c1: #B05C1A;
+  --c1-bg: #FEF5EB;
+  --c1-border: #F3D5AA;
+
+  --c2: #6438B0;
+  --c2-bg: #F4EFFE;
+  --c2-border: #D9C8F5;
+
+  --c3: #0D7A60;
+  --c3-bg: #ECFAF5;
+  --c3-border: #ACEEDD;
+
+  --c4: #1A4FAA;
+  --c4-bg: #EBF2FF;
+  --c4-border: #BBCFF5;
+
+  --c5: #A82060;
+  --c5-bg: #FFF0F6;
+  --c5-border: #F5BFDA;
+}
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--bg-dots) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 72px 40px 120px;
+}
+
+/* ── HEADER ── */
+.doc-header {
+  margin-bottom: 64px;
+  padding-bottom: 40px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.doc-eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.doc-eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.doc-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 58px;
+  font-weight: normal;
+  line-height: 1.05;
+  letter-spacing: -.5px;
+  margin-bottom: 12px;
+}
+
+.doc-title em {
+  font-style: italic;
+  color: var(--ink-2);
+}
+
+.doc-subtitle {
+  font-size: 16px;
+  color: var(--ink-2);
+  font-weight: 300;
+  max-width: 560px;
+  margin-bottom: 36px;
+  line-height: 1.6;
+}
+
+.doc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+  width: fit-content;
+}
+
+.meta-cell {
+  padding: 14px 24px;
+  border-right: 1px solid var(--border);
+}
+
+.meta-cell:last-child { border-right: none; }
+
+.meta-lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 3px;
+}
+
+.meta-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ── PHASES ── */
+.phase {
+  margin-bottom: 0;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+
+.phase.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.phase-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,.03), 0 4px 18px rgba(0,0,0,.05);
+}
+
+.phase-head {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  padding: 28px 32px;
+  border-bottom: 1px solid var(--border);
+  gap: 20px;
+}
+
+.phase-num {
+  font-family: Georgia, serif;
+  font-size: 72px;
+  font-weight: bold;
+  line-height: 1;
+  opacity: .13;
+  letter-spacing: -4px;
+  user-select: none;
+}
+
+.phase-meta-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 5px;
+  border: 1px solid;
+  width: fit-content;
+}
+
+.phase-name {
+  font-family: Georgia, serif;
+  font-size: 24px;
+  font-weight: normal;
+  line-height: 1.2;
+}
+
+.phase-desc {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  max-width: 560px;
+}
+
+.phase-body {
+  padding: 28px 32px;
+}
+
+.phase-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.phase-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.phase-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.phase-grid.cols-1 { grid-template-columns: 1fr; }
+
+.content-block { display: flex; flex-direction: column; gap: 10px; }
+
+.blk-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-3);
+}
+
+.simple-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.simple-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.simple-list li::before {
+  content: '—';
+  flex-shrink: 0;
+  color: var(--ink-3);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.decision-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 13px;
+  margin-bottom: 6px;
+}
+
+.dec-q {
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-bottom: 2px;
+}
+
+.dec-a {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Stack grid */
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.stack-item {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.si-role {
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: .04em;
+  margin-bottom: 2px;
+}
+
+.si-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Commit list */
+.commit-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.commit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+
+.c-type {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+.c-type.feat { background: #EBF2FF; color: #1A4FAA; }
+.c-type.fix  { background: #FFF0F0; color: #C22020; }
+.c-type.docs { background: #ECFAF5; color: #0D7A60; }
+.c-type.chore { background: #F4F0EA; color: #665E54; }
+
+.c-msg {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+
+/* Output strip */
+.output-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 32px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  flex-wrap: wrap;
+}
+
+.out-lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+/* Phase colors applied */
+.p1 .phase-head  { background: var(--c1-bg); border-bottom-color: var(--c1-border); }
+.p1 .phase-num   { color: var(--c1); }
+.p1 .phase-badge { background: var(--c1-bg); color: var(--c1); border-color: var(--c1-border); }
+.p1 .blk-title   { color: var(--c1); border-bottom-color: var(--c1-border); }
+.p1 .chip        { background: var(--c1-bg); color: var(--c1); border-color: var(--c1-border); }
+
+.p2 .phase-head  { background: var(--c2-bg); border-bottom-color: var(--c2-border); }
+.p2 .phase-num   { color: var(--c2); }
+.p2 .phase-badge { background: var(--c2-bg); color: var(--c2); border-color: var(--c2-border); }
+.p2 .blk-title   { color: var(--c2); border-bottom-color: var(--c2-border); }
+.p2 .chip        { background: var(--c2-bg); color: var(--c2); border-color: var(--c2-border); }
+
+.p3 .phase-head  { background: var(--c3-bg); border-bottom-color: var(--c3-border); }
+.p3 .phase-num   { color: var(--c3); }
+.p3 .phase-badge { background: var(--c3-bg); color: var(--c3); border-color: var(--c3-border); }
+.p3 .blk-title   { color: var(--c3); border-bottom-color: var(--c3-border); }
+.p3 .chip        { background: var(--c3-bg); color: var(--c3); border-color: var(--c3-border); }
+
+.p4 .phase-head  { background: var(--c4-bg); border-bottom-color: var(--c4-border); }
+.p4 .phase-num   { color: var(--c4); }
+.p4 .phase-badge { background: var(--c4-bg); color: var(--c4); border-color: var(--c4-border); }
+.p4 .blk-title   { color: var(--c4); border-bottom-color: var(--c4-border); }
+.p4 .chip        { background: var(--c4-bg); color: var(--c4); border-color: var(--c4-border); }
+
+.p5 .phase-head  { background: var(--c5-bg); border-bottom-color: var(--c5-border); }
+.p5 .phase-num   { color: var(--c5); }
+.p5 .phase-badge { background: var(--c5-bg); color: var(--c5); border-color: var(--c5-border); }
+.p5 .blk-title   { color: var(--c5); border-bottom-color: var(--c5-border); }
+.p5 .chip        { background: var(--c5-bg); color: var(--c5); border-color: var(--c5-border); }
+
+/* ── CONNECTOR ── */
+.connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+  gap: 0;
+}
+
+.con-line {
+  width: 1.5px;
+  height: 20px;
+  background: var(--border-2);
+}
+
+.con-arrow {
+  color: var(--ink-3);
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ── DEV CYCLE ── */
+.cycle-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 36px 36px 32px;
+  margin: 48px 0;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .55s ease .1s, transform .55s ease .1s;
+}
+
+.cycle-section.visible { opacity: 1; transform: translateY(0); }
+
+.section-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: normal;
+  margin-bottom: 6px;
+}
+
+.section-sub {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-bottom: 32px;
+}
+
+.cycle-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.cycle-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--c4-bg);
+  border: 1.5px solid var(--c4-border);
+  border-radius: 10px;
+  padding: 18px 22px 16px;
+  min-width: 140px;
+}
+
+.cs-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.cs-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c4);
+  margin-bottom: 4px;
+}
+
+.cs-desc {
+  font-size: 11px;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+
+.cycle-arr {
+  font-size: 22px;
+  color: var(--ink-3);
+  padding: 0 14px;
+  flex-shrink: 0;
+}
+
+.cycle-repeat {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  font-style: italic;
+  padding: 10px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  border: 1px dashed var(--border-2);
+}
+
+/* ── TEMPLATE CHECKLIST ── */
+.template-section {
+  background: var(--ink);
+  border-radius: 14px;
+  padding: 52px 48px;
+  margin-top: 48px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .55s ease .1s, transform .55s ease .1s;
+}
+
+.template-section.visible { opacity: 1; transform: translateY(0); }
+
+.tmpl-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+  margin-bottom: 8px;
+}
+
+.tmpl-title {
+  font-family: Georgia, serif;
+  font-size: 32px;
+  font-weight: normal;
+  color: #FBF8F3;
+  margin-bottom: 6px;
+}
+
+.tmpl-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,.55);
+  margin-bottom: 44px;
+  max-width: 520px;
+}
+
+.tmpl-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px 48px;
+}
+
+.tmpl-group { display: flex; flex-direction: column; gap: 10px; }
+
+.tmpl-group-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 2px;
+}
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13.5px;
+  color: rgba(255,255,255,.82);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.check-row:hover .cbox { border-color: rgba(255,255,255,.6); }
+
+.cbox {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid rgba(255,255,255,.25);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+
+.check-row.done .cbox {
+  background: #4ADE80;
+  border-color: #4ADE80;
+}
+
+.check-row.done .cbox::after {
+  content: '';
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #18150F;
+  border-bottom: 2px solid #18150F;
+  transform: rotate(-45deg) translateY(-1px);
+  display: block;
+}
+
+.check-row.done .check-text {
+  text-decoration: line-through;
+  color: rgba(255,255,255,.4);
+}
+
+.tmpl-note {
+  margin-top: 36px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: rgba(255,255,255,.5);
+  line-height: 1.6;
+}
+
+.tmpl-note strong { color: rgba(255,255,255,.75); }
+
+/* ── FOOTER ── */
+.doc-footer {
+  margin-top: 64px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-text {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.phase-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pd {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Responsive */
+@media (max-width: 680px) {
+  .page { padding: 40px 20px 80px; }
+  .doc-title { font-size: 38px; }
+  .phase-grid.cols-2,
+  .phase-grid.cols-3 { grid-template-columns: 1fr; }
+  .stack-grid { grid-template-columns: 1fr 1fr; }
+  .cycle-flow { flex-direction: column; }
+  .cycle-arr { transform: rotate(90deg); }
+  .tmpl-grid { grid-template-columns: 1fr; }
+  .phase-head { grid-template-columns: 64px 1fr; }
+  .phase-num { font-size: 52px; }
+}
+
+@media print {
+  body { background: white; background-image: none; }
+  .phase, .cycle-section, .template-section { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <header class="doc-header">
+    <div class="doc-eyebrow">Blueprint de Desenvolvimento · Junho 2026</div>
+    <h1 class="doc-title">Finanças<br><em>da Casa</em></h1>
+    <p class="doc-subtitle">Mapa completo da jornada — da ideia ao app funcionando. Criado para servir de template replicável em novos projetos.</p>
+    <div class="doc-meta">
+      <div class="meta-cell">
+        <div class="meta-lbl">Projeto</div>
+        <div class="meta-val">Finanças da Casa</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-lbl">Stack</div>
+        <div class="meta-val">Next.js 14 · Supabase</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-lbl">Commits</div>
+        <div class="meta-val">13 commits</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-lbl">Método</div>
+        <div class="meta-val">Spec-first · Claude Code</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- FASE 1 — IDEAÇÃO & PRD -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="phase p1">
+    <div class="phase-card">
+      <div class="phase-head">
+        <span class="phase-num">01</span>
+        <div class="phase-meta-group">
+          <span class="phase-badge">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM6.5 5.5a1.5 1.5 0 113 0c0 .98-.7 1.6-1.1 1.97C8 7.8 8 8 8 8.25v.25h-1v-.25C7 7.5 7.3 7.1 7.65 6.78 7.95 6.5 8 6.3 8 6a.5.5 0 00-1 0H5.5a1.5 1.5 0 011-1.5zM7.5 10a.5.5 0 100 1 .5.5 0 000-1z"/></svg>
+            Descoberta
+          </span>
+          <h2 class="phase-name">Ideação &amp; PRD</h2>
+          <p class="phase-desc">Bate-papo socrático com Claude para mapear o problema, definir o produto e tomar todas as decisões antes de escrever qualquer código.</p>
+        </div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-grid cols-2">
+          <div class="content-block">
+            <div class="blk-title">Método do Bate-papo</div>
+            <ul class="simple-list">
+              <li>Iniciar descrevendo o problema atual (planilha Excel com dashboard quebrado e sem acesso mobile)</li>
+              <li>Claude faz perguntas uma de cada vez — usuário responde de forma concisa</li>
+              <li>Cada resposta desbloqueia a próxima decisão de produto</li>
+              <li>Mockups visuais gerados e aprovados no chat, sem código</li>
+              <li>Todas as decisões documentadas com o "porquê" explícito</li>
+              <li>Output final: PRD.md + Histórico completo da conversa</li>
+            </ul>
+          </div>
+          <div class="content-block">
+            <div class="blk-title">Decisões Tomadas</div>
+            <div class="decision-card">
+              <div class="dec-q">Multi ou single user?</div>
+              <div class="dec-a">→ Usuário único — sem multiusuário, sem permissões</div>
+            </div>
+            <div class="decision-card">
+              <div class="dec-q">Onde ficam os dados?</div>
+              <div class="dec-a">→ Nuvem (Supabase) — sync celular ↔ desktop</div>
+            </div>
+            <div class="decision-card">
+              <div class="dec-q">Velocidade de lançamento?</div>
+              <div class="dec-a">→ 2 toques: subcategoria + valor. Resto automático</div>
+            </div>
+            <div class="decision-card">
+              <div class="dec-q">Como calcular o "quanto gastamos"?</div>
+              <div class="dec-a">→ Por competência (não caixa)</div>
+            </div>
+            <div class="decision-card">
+              <div class="dec-q">Gráficos em aba separada?</div>
+              <div class="dec-a">→ Não — na tela principal, na rolagem</div>
+            </div>
+            <div class="decision-card">
+              <div class="dec-q">Quais telas?</div>
+              <div class="dec-a">→ Dashboard, Novo Lançamento, Lançamentos, Cadastros</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="output-strip">
+        <span class="out-lbl">Outputs</span>
+        <div class="chips">
+          <span class="chip">📄 PRD.md</span>
+          <span class="chip">💬 Histórico_Conversa.md</span>
+          <span class="chip">✅ 6 decisões aprovadas</span>
+          <span class="chip">🎨 Mockups aprovados no chat</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="con-line"></div><div class="con-arrow">↓</div><div class="con-line"></div></div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- FASE 2 — DESIGN & ESPECIFICAÇÃO -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="phase p2">
+    <div class="phase-card">
+      <div class="phase-head">
+        <span class="phase-num">02</span>
+        <div class="phase-meta-group">
+          <span class="phase-badge">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5V5.5L10.5 1H2.5zm8 0L15 5.5H11a.5.5 0 01-.5-.5V1z"/></svg>
+            Design
+          </span>
+          <h2 class="phase-name">Design &amp; Especificação</h2>
+          <p class="phase-desc">Definir os tokens visuais e escrever specs em Markdown antes de cada feature — código sempre segue a spec, nunca o contrário.</p>
+        </div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-grid cols-2">
+          <div class="content-block">
+            <div class="blk-title">Tokens de Design</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div class="decision-card">
+                <div class="dec-q">Fundo / Superfície</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+                  <div style="width:22px;height:22px;border-radius:5px;background:#f5f0e8;border:1px solid #ddd;flex-shrink:0;"></div>
+                  <span style="font-size:13px;font-weight:500;font-family:Consolas,monospace;">#f5f0e8</span>
+                  <span style="font-size:12px;color:var(--ink-3);">bege creme</span>
+                  <div style="width:22px;height:22px;border-radius:5px;background:#ffffff;border:1px solid #ddd;flex-shrink:0;margin-left:8px;"></div>
+                  <span style="font-size:13px;font-weight:500;font-family:Consolas,monospace;">#ffffff</span>
+                </div>
+              </div>
+              <div class="decision-card">
+                <div class="dec-q">Cores por Categoria</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 8px;border-radius:5px;background:#ede9fe;color:#7c3aed;font-weight:500;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#a78bfa;display:block;"></span>Casa
+                  </span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 8px;border-radius:5px;background:#d1fae5;color:#059669;font-weight:500;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#34d399;display:block;"></span>Alimentação
+                  </span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 8px;border-radius:5px;background:#fee2e2;color:#dc2626;font-weight:500;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#f87171;display:block;"></span>Saúde
+                  </span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 8px;border-radius:5px;background:#fce7f3;color:#db2777;font-weight:500;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#f472b6;display:block;"></span>Presentes
+                  </span>
+                  <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 8px;border-radius:5px;background:#ffedd5;color:#ea580c;font-weight:500;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#fb923c;display:block;"></span>Lazer
+                  </span>
+                </div>
+              </div>
+              <div class="decision-card">
+                <div class="dec-q">Tipografia</div>
+                <div class="dec-a">Inter 400 / 500 — sem excesso de negrito</div>
+              </div>
+            </div>
+          </div>
+          <div class="content-block">
+            <div class="blk-title">Processo Spec-First</div>
+            <ul class="simple-list">
+              <li>Mockup aprovado no chat <em>antes</em> de qualquer código</li>
+              <li>Cada feature nova começa com um arquivo <code style="font-size:12px;background:#f0ece4;padding:1px 5px;border-radius:3px;">spec.md</code> descrevendo comportamento</li>
+              <li>Layout mobile: bottom nav (3 itens) + FAB preto "Novo lançamento"</li>
+              <li>Layout desktop: sidebar fixa 224px + conteúdo centralizado max-w-lg</li>
+              <li>Referências de mercado: Nubank (clareza), Linear (limpeza), Organizze (organização)</li>
+              <li>Screenshots do produto de referência mantidos na raiz como guia visual</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="output-strip">
+        <span class="out-lbl">Outputs</span>
+        <div class="chips">
+          <span class="chip">🎨 Design tokens definidos</span>
+          <span class="chip">📱 Layout mobile aprovado</span>
+          <span class="chip">🖥️ Layout desktop aprovado</span>
+          <span class="chip">📝 Specs MD por feature</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="con-line"></div><div class="con-arrow">↓</div><div class="con-line"></div></div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- FASE 3 — SETUP TÉCNICO -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="phase p3">
+    <div class="phase-card">
+      <div class="phase-head">
+        <span class="phase-num">03</span>
+        <div class="phase-meta-group">
+          <span class="phase-badge">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8.932.727c-.243-.97-1.62-.97-1.864 0l-.071.286a.96.96 0 01-1.622.434l-.205-.211c-.695-.719-1.888-.03-1.613.931l.08.284a.96.96 0 01-1.186 1.187l-.284-.081c-.96-.275-1.65.918-.931 1.613l.211.205a.96.96 0 01-.434 1.622l-.286.071c-.97.243-.97 1.62 0 1.864l.286.071a.96.96 0 01.434 1.622l-.211.205c-.719.695-.03 1.888.931 1.613l.284-.08a.96.96 0 011.187 1.187l-.081.283c-.275.96.918 1.65 1.613.931l.205-.211a.96.96 0 011.622.434l.071.286c.243.97 1.62.97 1.864 0l.071-.286a.96.96 0 011.622-.434l.205.211c.695.719 1.888.03 1.613-.931l-.08-.284a.96.96 0 011.187-1.186l.283.081c.96.275 1.65-.918.931-1.613l-.211-.205a.96.96 0 01.434-1.622l.286-.071c.97-.243.97-1.62 0-1.864l-.286-.071a.96.96 0 01-.434-1.622l.211-.205c.719-.695.03-1.888-.931-1.613l-.284.08A.96.96 0 0110.327 1l-.08-.284zM8 5.5a2.5 2.5 0 110 5 2.5 2.5 0 010-5z"/></svg>
+            Fundação
+          </span>
+          <h2 class="phase-name">Setup Técnico</h2>
+          <p class="phase-desc">Escolha da stack, criação do schema, seed com dados reais e configuração do workflow antes de qualquer linha de feature.</p>
+        </div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-grid cols-1">
+          <div class="content-block">
+            <div class="blk-title">Stack Tecnológica</div>
+            <div class="stack-grid">
+              <div class="stack-item">
+                <div class="si-role">Framework</div>
+                <div class="si-name">Next.js 14</div>
+              </div>
+              <div class="stack-item">
+                <div class="si-role">Linguagem</div>
+                <div class="si-name">TypeScript</div>
+              </div>
+              <div class="stack-item">
+                <div class="si-role">Styling</div>
+                <div class="si-name">Tailwind v4</div>
+              </div>
+              <div class="stack-item">
+                <div class="si-role">Componentes</div>
+                <div class="si-name">shadcn/ui</div>
+              </div>
+              <div class="stack-item">
+                <div class="si-role">Backend / Auth</div>
+                <div class="si-name">Supabase</div>
+              </div>
+              <div class="stack-item">
+                <div class="si-role">State / Cache</div>
+                <div class="si-name">TanStack Query</div>
+              </div>
+              <div class="stack-item">
+                <div class="si-role">Gráficos</div>
+                <div class="si-name">Recharts</div>
+              </div>
+              <div class="stack-item">
+                <div class="si-role">Deploy</div>
+                <div class="si-name">Vercel</div>
+              </div>
+            </div>
+          </div>
+          <div class="phase-grid cols-2" style="margin-top:4px;">
+            <div class="content-block">
+              <div class="blk-title">Arquivos Criados no Setup</div>
+              <ul class="simple-list">
+                <li><code style="font-size:12px;background:#edf6f2;color:#0d7a60;padding:1px 5px;border-radius:3px;">supabase/schema.sql</code> — schema completo (transactions, categories, sources)</li>
+                <li><code style="font-size:12px;background:#edf6f2;color:#0d7a60;padding:1px 5px;border-radius:3px;">supabase/seed.sql</code> — dados reais migrados da planilha Excel</li>
+                <li><code style="font-size:12px;background:#edf6f2;color:#0d7a60;padding:1px 5px;border-radius:3px;">CLAUDE.md</code> — instruções persistentes para o Claude Code</li>
+                <li><code style="font-size:12px;background:#edf6f2;color:#0d7a60;padding:1px 5px;border-radius:3px;">.env.local</code> — URL + anon key do Supabase</li>
+              </ul>
+            </div>
+            <div class="content-block">
+              <div class="blk-title">CLAUDE.md — Regras Persistentes</div>
+              <ul class="simple-list">
+                <li>Após <strong>qualquer</strong> alteração de código: criar commit (conventional commits)</li>
+                <li>Fazer <code style="font-size:12px;background:#edf6f2;color:#0d7a60;padding:1px 5px;border-radius:3px;">git push origin main</code> imediatamente após</li>
+                <li>Claude segue essas regras sem precisar ser lembrado a cada mensagem</li>
+                <li>Memória do projeto salva em <code style="font-size:12px;background:#edf6f2;color:#0d7a60;padding:1px 5px;border-radius:3px;">~/.claude/projects/.../memory/</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="output-strip">
+        <span class="out-lbl">Outputs</span>
+        <div class="chips">
+          <span class="chip">🗄️ schema.sql</span>
+          <span class="chip">🌱 seed.sql</span>
+          <span class="chip">📋 CLAUDE.md</span>
+          <span class="chip">🔧 Git configurado</span>
+          <span class="chip">📦 Dependências instaladas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="con-line"></div><div class="con-arrow">↓</div><div class="con-line"></div></div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- FASE 4 — DESENVOLVIMENTO ITERATIVO -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="phase p4">
+    <div class="phase-card">
+      <div class="phase-head">
+        <span class="phase-num">04</span>
+        <div class="phase-meta-group">
+          <span class="phase-badge">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M5.854 4.146a.5.5 0 010 .708L3.707 7l2.147 2.146a.5.5 0 01-.708.708l-2.5-2.5a.5.5 0 010-.708l2.5-2.5a.5.5 0 01.708 0zm4.292 0a.5.5 0 000 .708L12.293 7l-2.147 2.146a.5.5 0 00.708.708l2.5-2.5a.5.5 0 000-.708l-2.5-2.5a.5.5 0 00-.708 0zM7.854 1.146a.5.5 0 00-.708.708l2.5 9.5a.5.5 0 00.708-.708l-2.5-9.5z"/></svg>
+            Implementação
+          </span>
+          <h2 class="phase-name">Desenvolvimento Iterativo</h2>
+          <p class="phase-desc">Cada feature segue o mesmo ciclo: spec → código → commit → push. 13 commits do zero ao app completo com todas as features.</p>
+        </div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-grid cols-2">
+          <div class="content-block">
+            <div class="blk-title">Ciclo por Feature</div>
+            <ul class="simple-list">
+              <li><strong>1. Spec MD:</strong> descrever o comportamento esperado antes de codar</li>
+              <li><strong>2. Código:</strong> Claude Code implementa seguindo a spec</li>
+              <li><strong>3. Revisão:</strong> testar no browser, ajustar se necessário</li>
+              <li><strong>4. Commit:</strong> conventional commit com mensagem descritiva</li>
+              <li><strong>5. Push:</strong> imediato após o commit (regra do CLAUDE.md)</li>
+            </ul>
+            <div style="margin-top:12px;">
+              <div class="blk-title">Features do App</div>
+              <ul class="simple-list">
+                <li>Dashboard com HeroCard, gráficos e resumo do mês</li>
+                <li>NewTransactionSheet — bottom sheet com lançamento rápido</li>
+                <li>Aba Lançamentos com filtro combinado e edição</li>
+                <li>Aba Cadastros (categorias, fontes, origens de receita)</li>
+                <li>Relatórios: Fluxo de Caixa + Conferência de Extrato</li>
+                <li>Period selector + toggle competência / caixa</li>
+                <li>Clone de transação + Import/Export Excel</li>
+                <li>Sort por data de pagamento e competência</li>
+              </ul>
+            </div>
+          </div>
+          <div class="content-block">
+            <div class="blk-title">Histórico de Commits (13)</div>
+            <ul class="commit-list">
+              <li class="commit-item">
+                <span class="c-type feat">feat</span>
+                <span class="c-msg">initial commit — app completo (dashboard, lançamentos, cadastros)</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type docs">docs</span>
+                <span class="c-msg">period selector design spec</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type feat">feat</span>
+                <span class="c-msg">period selector, view mode toggle e fixes no formulário</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type chore">chore</span>
+                <span class="c-msg">CLAUDE.md — auto-commit e push instructions</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type docs">docs</span>
+                <span class="c-msg">zero-to-deploy guide completo</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type feat">feat</span>
+                <span class="c-msg">UX improvements: swipe-to-delete e fluxo de exclusão segura</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type docs">docs</span>
+                <span class="c-msg">relatórios feature spec (fluxo de caixa + conferência)</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type feat">feat</span>
+                <span class="c-msg">Relatórios — Fluxo de Caixa e Conferência de Extrato</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type fix">fix</span>
+                <span class="c-msg">competência date format, UUIDs visíveis e validação de campos</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type docs">docs</span>
+                <span class="c-msg">spec: clone, Excel import/export, conferência date filter</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type feat">feat</span>
+                <span class="c-msg">clone de transação, Excel import/export e saldo por data</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type feat">feat</span>
+                <span class="c-msg">sort por data de pagamento e competência</span>
+              </li>
+              <li class="commit-item">
+                <span class="c-type fix">fix</span>
+                <span class="c-msg">dashboard competência day != 1, layout desktop, Aba Entradas</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="output-strip">
+        <span class="out-lbl">Outputs</span>
+        <div class="chips">
+          <span class="chip">✅ App funcionando</span>
+          <span class="chip">📱 Mobile + Desktop</span>
+          <span class="chip">🔄 13 commits</span>
+          <span class="chip">📊 Relatórios implementados</span>
+          <span class="chip">📥 Excel I/O</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="con-line"></div><div class="con-arrow">↓</div><div class="con-line"></div></div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- FASE 5 — PADRÕES & BOAS PRÁTICAS -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="phase p5">
+    <div class="phase-card">
+      <div class="phase-head">
+        <span class="phase-num">05</span>
+        <div class="phase-meta-group">
+          <span class="phase-badge">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0l1.669.864 1.858.282.842 1.68 1.337 1.32L13.4 6l.306 1.854-1.337 1.32-.842 1.68-1.858.282L8 12l-1.669-.864-1.858-.282-.842-1.68-1.337-1.32L2.6 6l-.306-1.854 1.337-1.32.842-1.68L6.331.864zM4 7.414l.472-.472 2 2L9.528 5.886l.472.471L6.472 9.886z"/></svg>
+            Qualidade
+          </span>
+          <h2 class="phase-name">Padrões &amp; Boas Práticas</h2>
+          <p class="phase-desc">As práticas que tornaram o desenvolvimento fluido e o resultado previsível — aplicáveis a qualquer projeto novo.</p>
+        </div>
+      </div>
+      <div class="phase-body">
+        <div class="phase-grid cols-2">
+          <div class="content-block">
+            <div class="blk-title">Práticas de Desenvolvimento</div>
+            <ul class="simple-list">
+              <li><strong>Spec-first:</strong> escrever arquivo MD descrevendo a feature antes de codar — nunca ao contrário</li>
+              <li><strong>Conventional commits:</strong> <code style="font-size:11.5px;background:#fdf0f6;color:#a82060;padding:1px 4px;border-radius:3px;">feat:</code> <code style="font-size:11.5px;background:#fdf0f6;color:#a82060;padding:1px 4px;border-radius:3px;">fix:</code> <code style="font-size:11.5px;background:#fdf0f6;color:#a82060;padding:1px 4px;border-radius:3px;">docs:</code> <code style="font-size:11.5px;background:#fdf0f6;color:#a82060;padding:1px 4px;border-radius:3px;">refactor:</code></li>
+              <li><strong>Auto-commit+push:</strong> via CLAUDE.md — nenhuma alteração fica sem histórico</li>
+              <li><strong>Screenshots como referência:</strong> imagens do produto de referência na raiz do projeto</li>
+              <li><strong>Seed com dados reais:</strong> banco pré-populado com dados da planilha original desde o início</li>
+            </ul>
+          </div>
+          <div class="content-block">
+            <div class="blk-title">Configuração do Claude Code</div>
+            <ul class="simple-list">
+              <li><strong>CLAUDE.md no projeto:</strong> instruções que o Claude segue em toda sessão, sem precisar repetir</li>
+              <li><strong>Memory files:</strong> contexto persistente entre sessões em <code style="font-size:11.5px;background:#fdf0f6;color:#a82060;padding:1px 4px;border-radius:3px;">~/.claude/projects/</code></li>
+              <li><strong>Tipos de memória usados:</strong> <em>project</em> (contexto do app), <em>feedback</em> (comportamentos aprovados), <em>user</em> (perfil e preferências)</li>
+              <li><strong>PRD como contexto:</strong> enviar PRD.md e histórico da conversa ao iniciar o desenvolvimento no Claude Code</li>
+              <li><strong>Docs de specs versionadas:</strong> cada spec.md commitada junto com o código que implementa</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="output-strip">
+        <span class="out-lbl">Resultado</span>
+        <div class="chips">
+          <span class="chip">🧠 Claude sempre em contexto</span>
+          <span class="chip">📂 Histórico limpo e legível</span>
+          <span class="chip">🔁 Processo replicável</span>
+          <span class="chip">🚫 Zero retrabalho por falta de spec</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- DEV CYCLE -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="cycle-section">
+    <div class="section-eyebrow">O Ciclo Que Repete</div>
+    <h2 class="section-title">Loop de Desenvolvimento de Features</h2>
+    <p class="section-sub">Cada nova funcionalidade — grande ou pequena — segue exatamente esta sequência.</p>
+    <div class="cycle-flow">
+      <div class="cycle-step">
+        <div class="cs-icon">📝</div>
+        <div class="cs-name">Spec MD</div>
+        <div class="cs-desc">Descrever o<br>comportamento esperado</div>
+      </div>
+      <div class="cycle-arr">→</div>
+      <div class="cycle-step">
+        <div class="cs-icon">⌨️</div>
+        <div class="cs-name">Código</div>
+        <div class="cs-desc">Claude Code<br>implementa a spec</div>
+      </div>
+      <div class="cycle-arr">→</div>
+      <div class="cycle-step">
+        <div class="cs-icon">🔍</div>
+        <div class="cs-name">Revisão</div>
+        <div class="cs-desc">Testar no browser<br>e ajustar</div>
+      </div>
+      <div class="cycle-arr">→</div>
+      <div class="cycle-step">
+        <div class="cs-icon">📦</div>
+        <div class="cs-name">Commit</div>
+        <div class="cs-desc">Conventional commit<br>descritivo</div>
+      </div>
+      <div class="cycle-arr">→</div>
+      <div class="cycle-step">
+        <div class="cs-icon">🚀</div>
+        <div class="cs-name">Push</div>
+        <div class="cs-desc">git push origin main<br>imediatamente</div>
+      </div>
+    </div>
+    <div class="cycle-repeat">↺ Repetir para cada nova feature ou correção</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- TEMPLATE CHECKLIST -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="template-section">
+    <div class="tmpl-eyebrow">Template Reutilizável</div>
+    <h2 class="tmpl-title">Checklist para o Próximo Projeto</h2>
+    <p class="tmpl-sub">Copie este processo para qualquer novo app. Marque as etapas à medida que avança — clique nos checkboxes.</p>
+    <div class="tmpl-grid">
+      <div class="tmpl-group">
+        <div class="tmpl-group-title">Fase 1 — Ideação &amp; PRD</div>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Descrever o problema atual e o que incomoda</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Bate-papo socrático: explorar requisitos com perguntas uma de cada vez</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Aprovar mockups visuais no chat antes de qualquer código</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Documentar todas as decisões com o "porquê"</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Gerar PRD.md e Histórico_Conversa.md</span></label>
+      </div>
+      <div class="tmpl-group">
+        <div class="tmpl-group-title">Fase 2 — Design &amp; Especificação</div>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Definir paleta de cores e tokens de tipografia</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Aprovar layout mobile e desktop separadamente</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Salvar screenshots de referência na raiz do projeto</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Criar template de spec.md para features futuras</span></label>
+      </div>
+      <div class="tmpl-group">
+        <div class="tmpl-group-title">Fase 3 — Setup Técnico</div>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Definir stack e criar projeto (Next.js, Supabase, etc.)</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Criar schema.sql com todas as tabelas do MVP</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Criar seed.sql com dados reais ou representativos</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Criar CLAUDE.md com regra de auto-commit+push</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Enviar PRD.md para o Claude Code como contexto inicial</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Configurar Git e fazer primeiro commit</span></label>
+      </div>
+      <div class="tmpl-group">
+        <div class="tmpl-group-title">Fase 4–5 — Desenvolvimento &amp; Padrões</div>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Escrever spec.md antes de cada feature nova</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Seguir ciclo: Spec → Código → Revisão → Commit → Push</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Usar conventional commits (feat/fix/docs/refactor)</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Nunca deixar alterações sem commit no fim da sessão</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Manter memory files atualizadas no Claude Code</span></label>
+        <label class="check-row"><span class="cbox"></span><span class="check-text">Deploy no Vercel ao atingir MVP funcional</span></label>
+      </div>
+    </div>
+    <div class="tmpl-note">
+      <strong>Dica principal:</strong> A maior alavanca deste processo é o <strong>bate-papo socrático no início</strong> — responder uma pergunta de cada vez força clareza sobre o produto antes de qualquer linha de código. O segundo maior ganho é o <strong>CLAUDE.md</strong>: instruções persistentes poupam tempo em toda sessão futura.
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="doc-footer">
+    <span class="footer-text">Finanças da Casa · Blueprint de Desenvolvimento · 2026</span>
+    <div class="phase-dots">
+      <div class="pd" style="background:var(--c1);"></div>
+      <div class="pd" style="background:var(--c2);"></div>
+      <div class="pd" style="background:var(--c3);"></div>
+      <div class="pd" style="background:var(--c4);"></div>
+      <div class="pd" style="background:var(--c5);"></div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(el => {
+      if (el.isIntersecting) el.target.classList.add('visible');
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.phase, .cycle-section, .template-section')
+    .forEach(el => observer.observe(el));
+
+  // Interactive checklist
+  document.querySelectorAll('.check-row').forEach(row => {
+    row.addEventListener('click', () => row.classList.toggle('done'));
+  });
+</script>
+</body>
+</html>
